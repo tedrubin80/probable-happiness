@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Tracker - Job Application Manager</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h1>Resume Tracker</h1>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">&#128200;</span>
+          Dashboard
+        </li>
+        <li class="nav-item" data-view="jobs">
+          <span class="nav-icon">&#128188;</span>
+          Job Applications
+        </li>
+        <li class="nav-item" data-view="resumes">
+          <span class="nav-icon">&#128196;</span>
+          My Resumes
+        </li>
+        <li class="nav-item" data-view="ai-assistant">
+          <span class="nav-icon">&#129302;</span>
+          AI Assistant
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Dashboard View -->
+      <div id="dashboard-view" class="view active">
+        <div class="view-header">
+          <h2>Dashboard</h2>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Applications</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-week">0</div>
+            <div class="stat-label">This Week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-interviews">0</div>
+            <div class="stat-label">Upcoming Interviews</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-active">0</div>
+            <div class="stat-label">Active Applications</div>
+          </div>
+        </div>
+        <div class="recent-activity">
+          <h3>Recent Applications</h3>
+          <div id="recent-jobs-list" class="jobs-list"></div>
+        </div>
+      </div>
+
+      <!-- Jobs View -->
+      <div id="jobs-view" class="view">
+        <div class="view-header">
+          <h2>Job Applications</h2>
+          <button class="btn btn-primary" onclick="showJobModal()">+ Add Application</button>
+        </div>
+        <div class="filters">
+          <select id="status-filter" onchange="filterJobs()">
+            <option value="">All Statuses</option>
+            <option value="applied">Applied</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="offer">Offer</option>
+            <option value="rejected">Rejected</option>
+            <option value="withdrawn">Withdrawn</option>
+          </select>
+          <input type="text" id="search-filter" placeholder="Search jobs..." oninput="filterJobs()">
+        </div>
+        <div id="jobs-list" class="jobs-list"></div>
+      </div>
+
+      <!-- Resumes View -->
+      <div id="resumes-view" class="view">
+        <div class="view-header">
+          <h2>My Resumes</h2>
+          <button class="btn btn-primary" onclick="showResumeModal()">+ Upload Resume</button>
+        </div>
+        <div id="resumes-list" class="resumes-grid"></div>
+      </div>
+
+      <!-- AI Assistant View -->
+      <div id="ai-assistant-view" class="view">
+        <div class="view-header">
+          <h2>AI Assistant</h2>
+          <div class="ai-status" id="ai-status">Checking connection...</div>
+        </div>
+        <div class="ai-container">
+          <div class="ai-sidebar">
+            <div class="ai-context">
+              <h4>Context</h4>
+              <label>
+                Resume:
+                <select id="ai-resume-select">
+                  <option value="">Select a resume...</option>
+                </select>
+              </label>
+              <label>
+                Job Application:
+                <select id="ai-job-select">
+                  <option value="">Select a job...</option>
+                </select>
+              </label>
+              <button class="btn btn-secondary" onclick="analyzeFit()">Analyze Fit</button>
+              <button class="btn btn-secondary" onclick="getResumeSuggestions()">Resume Suggestions</button>
+            </div>
+          </div>
+          <div class="ai-chat">
+            <div id="chat-messages" class="chat-messages">
+              <div class="chat-message system">
+                <p>Hello! I'm your AI career assistant. I can help you:</p>
+                <ul>
+                  <li>Compare your resume to job postings</li>
+                  <li>Suggest resume improvements</li>
+                  <li>Analyze if a job is a good fit</li>
+                </ul>
+                <p>Select a resume and/or job above to get started, or just ask me a question!</p>
+              </div>
+            </div>
+            <div class="chat-input-container">
+              <textarea id="chat-input" placeholder="Ask me about your resume or job applications..." rows="2"></textarea>
+              <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Job Modal -->
+  <div id="job-modal" class="modal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3 id="job-modal-title">Add Job Application</h3>
+        <button class="close-btn" onclick="closeJobModal()">&times;</button>
+      </div>
+      <form id="job-form" onsubmit="saveJob(event)">
+        <input type="hidden" id="job-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="job-company">Company *</label>
+            <input type="text" id="job-company" required>
+          </div>
+          <div class="form-group">
+            <label for="job-title">Job Title *</label>
+            <input type="text" id="job-title" required>
+          </div>
+          <div class="form-group">
+            <label for="job-url">Job URL</label>
+            <input type="url" id="job-url">
+          </div>
+          <div class="form-group">
+            <label for="job-date-applied">Date Applied *</label>
+            <input type="date" id="job-date-applied" required>
+          </div>
+          <div class="form-group">
+            <label for="job-status">Status</label>
+            <select id="job-status">
+              <option value="applied">Applied</option>
+              <option value="interviewing">Interviewing</option>
+              <option value="offer">Offer</option>
+              <option value="rejected">Rejected</option>
+              <option value="withdrawn">Withdrawn</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="job-interview-date">Interview Date</label>
+            <input type="datetime-local" id="job-interview-date">
+          </div>
+          <div class="form-group">
+            <label for="job-interview-type">Interview Type</label>
+            <input type="text" id="job-interview-type" placeholder="Phone, Video, On-site...">
+          </div>
+          <div class="form-group">
+            <label for="job-last-communication">Last Communication</label>
+            <input type="date" id="job-last-communication">
+          </div>
+          <div class="form-group">
+            <label for="job-salary">Salary Range</label>
+            <input type="text" id="job-salary" placeholder="$80,000 - $100,000">
+          </div>
+          <div class="form-group">
+            <label for="job-location">Location</label>
+            <input type="text" id="job-location">
+          </div>
+          <div class="form-group">
+            <label for="job-remote">Remote Type</label>
+            <select id="job-remote">
+              <option value="">Select...</option>
+              <option value="on-site">On-site</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="remote">Remote</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="job-contact-name">Contact Name</label>
+            <input type="text" id="job-contact-name">
+          </div>
+          <div class="form-group">
+            <label for="job-contact-email">Contact Email</label>
+            <input type="email" id="job-contact-email">
+          </div>
+          <div class="form-group">
+            <label for="job-contact-phone">Contact Phone</label>
+            <input type="tel" id="job-contact-phone">
+          </div>
+        </div>
+        <div class="form-group full-width">
+          <label for="job-notes">Notes</label>
+          <textarea id="job-notes" rows="6" placeholder="Add detailed notes about this application..."></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label>Links</label>
+          <div id="job-links-container"></div>
+          <button type="button" class="btn btn-secondary btn-small" onclick="addLinkField()">+ Add Link</button>
+        </div>
+        <div class="form-group full-width">
+          <label for="job-posting-file">Job Posting PDF</label>
+          <input type="file" id="job-posting-file" accept=".pdf">
+          <small>Upload the job posting for AI analysis</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeJobModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Resume Modal -->
+  <div id="resume-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Upload Resume</h3>
+        <button class="close-btn" onclick="closeResumeModal()">&times;</button>
+      </div>
+      <form id="resume-form" onsubmit="saveResume(event)">
+        <div class="form-group">
+          <label for="resume-name">Resume Name *</label>
+          <input type="text" id="resume-name" required placeholder="e.g., Software Engineer Resume">
+        </div>
+        <div class="form-group">
+          <label for="resume-file">PDF File *</label>
+          <input type="file" id="resume-file" accept=".pdf" required>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="resume-default">
+            Set as default resume
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeResumeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Job Detail Modal -->
+  <div id="job-detail-modal" class="modal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3 id="job-detail-title">Job Details</h3>
+        <button class="close-btn" onclick="closeJobDetailModal()">&times;</button>
+      </div>
+      <div id="job-detail-content"></div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
